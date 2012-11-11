@@ -1,0 +1,26 @@
+//
+// Prefix header for all source files of the 'RRAutoLayout' target in the 'RRAutoLayout' project
+//
+
+#ifdef __OBJC__
+    #import <UIKit/UIKit.h>
+    #import <Foundation/Foundation.h>
+    #import <objc/runtime.h>
+#endif
+
+
+#define REPLACE_METHOD(__CLASS__, __ORIG_SELECTOR__, __NEW_SELECTOR__) {                                                                            \
+    Method origInstanceMethod = class_getInstanceMethod(__CLASS__, __ORIG_SELECTOR__);                                                              \
+    Method newInstanceMethod  = class_getInstanceMethod(__CLASS__, __NEW_SELECTOR__);                                                               \
+    if( class_addMethod(__CLASS__, __ORIG_SELECTOR__, method_getImplementation(newInstanceMethod), method_getTypeEncoding(newInstanceMethod)) ){    \
+        class_replaceMethod(__CLASS__, __NEW_SELECTOR__, method_getImplementation(origInstanceMethod), method_getTypeEncoding(origInstanceMethod)); \
+    }else{                                                                                                                                          \
+        method_exchangeImplementations(origInstanceMethod, newInstanceMethod);                                                                      \
+    }                                                                                                                                               \
+}
+
+
+#define ADD_METHOD(__CLASS__, __ORIG_SELECTOR__, __NEW_SELECTOR__) {                                                                                \
+    Method newInstanceMethod  = class_getInstanceMethod(__CLASS__, __NEW_SELECTOR__);                                                               \
+    class_addMethod(__CLASS__, __ORIG_SELECTOR__, method_getImplementation(newInstanceMethod), method_getTypeEncoding(newInstanceMethod));          \
+}
