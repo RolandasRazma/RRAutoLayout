@@ -69,7 +69,7 @@ static inline void CGRectAddAttribute(CGRect *rect, RRLayoutAttribute attribute1
             break;
         }
         default:
-            NSLog(@"%i + %@ %i", attribute1, NSStringFromCGRect(rect2), attribute2);
+            NSLog(@"%i + %@ %i + %.f", attribute1, NSStringFromCGRect(rect2), attribute2, c);
             break;
     }
     
@@ -86,19 +86,19 @@ static inline void CGRectAddAttribute(CGRect *rect, RRLayoutAttribute attribute1
 + (void)load {
     
     if( ![[UIView class] respondsToSelector:@selector(requiresConstraintBasedLayout)] ){
-        REPLACE_METHOD([UIView class], @selector(layoutSublayersOfLayer:),  @selector(rr_r_layoutSublayersOfLayer:))
-        REPLACE_METHOD([UIView class], @selector(initWithCoder:),           @selector(rr_r_initWithCoder:))
-        REPLACE_METHOD([UIView class], @selector(layoutSubviews),           @selector(rr_r_layoutSubviews))
-        REPLACE_METHOD([UIView class], @selector(setTransform),             @selector(rr_r_setTransform))
-        REPLACE_METHOD([UIView class], @selector(setCenter),                @selector(rr_r_setCenter))
-        REPLACE_METHOD([UIView class], @selector(setBounds),                @selector(rr_r_setBounds))
+        REPLACE_METHOD([UIView class], @selector(layoutSublayersOfLayer:),          @selector(rr_r_layoutSublayersOfLayer:))
+        REPLACE_METHOD([UIView class], @selector(initWithCoder:),                   @selector(rr_r_initWithCoder:))
+        REPLACE_METHOD([UIView class], @selector(layoutSubviews),                   @selector(rr_r_layoutSubviews))
+        REPLACE_METHOD([UIView class], @selector(setTransform),                     @selector(rr_r_setTransform))
+        REPLACE_METHOD([UIView class], @selector(setCenter),                        @selector(rr_r_setCenter))
+        REPLACE_METHOD([UIView class], @selector(setBounds),                        @selector(rr_r_setBounds))
 
-        ADD_METHOD([UIView class], @selector(constraints),                  @selector(rr_a_constraints))
-        ADD_METHOD([UIView class], @selector(addConstraint:),               @selector(rr_a_addConstraint:))
-        ADD_METHOD([UIView class], @selector(addConstraints:),              @selector(rr_a_addConstraints:))
-        ADD_METHOD([UIView class], @selector(updateConstraints),            @selector(rr_a_updateConstraints))
-        ADD_METHOD([UIView class], @selector(updateConstraintsIfNeeded),    @selector(rr_a_updateConstraintsIfNeeded))
-        ADD_METHOD([UIView class], @selector(setNeedsUpdateConstraints),    @selector(rr_a_setNeedsUpdateConstraints))
+        ADD_METHOD([UIView class], @selector(constraints),                          @selector(rr_a_constraints))
+        ADD_METHOD([UIView class], @selector(addConstraint:),                       @selector(rr_a_addConstraint:))
+        ADD_METHOD([UIView class], @selector(addConstraints:),                      @selector(rr_a_addConstraints:))
+        ADD_METHOD([UIView class], @selector(updateConstraints),                    @selector(rr_a_updateConstraints))
+        ADD_METHOD([UIView class], @selector(updateConstraintsIfNeeded),            @selector(rr_a_updateConstraintsIfNeeded))
+        ADD_METHOD([UIView class], @selector(setNeedsUpdateConstraints),            @selector(rr_a_setNeedsUpdateConstraints))
     }
     
 }
@@ -210,10 +210,10 @@ static inline void CGRectAddAttribute(CGRect *rect, RRLayoutAttribute attribute1
 
 
 - (void)rr_r_layoutSubviews {
-    
+
     NSArray *constraints = self.constraints;
     if( constraints.count ){
-        [self.subviews enumerateObjectsWithOptions: NSEnumerationConcurrent
+        [self.subviews enumerateObjectsWithOptions: NSEnumerationReverse
                                         usingBlock: ^(UIView *view, NSUInteger idx, BOOL *stop) {
                                             
                                             // Try to get possible size of view from it's internal constrains
@@ -233,24 +233,30 @@ static inline void CGRectAddAttribute(CGRect *rect, RRLayoutAttribute attribute1
                                             CGPoint center = CGPointZero;
                                             for( NSLayoutConstraint *layoutConstraint in constraints ){
 
-                                                if( [view isEqual: layoutConstraint.firstItem] ){
-
+                                                if( [view isEqual: layoutConstraint.firstItem] && [self isEqual: layoutConstraint.secondItem] ){
                                                     CGRectAddAttribute(&bounds,
                                                                        layoutConstraint.firstAttribute,
                                                                        [(UIView *)layoutConstraint.secondItem bounds],
                                                                        layoutConstraint.secondAttribute,
                                                                        layoutConstraint.constant);
-
-                                                }else if( [view isEqual:layoutConstraint.secondItem] ){
                                                     
+                                                }else if( [view isEqual:layoutConstraint.secondItem] && [self isEqual: layoutConstraint.firstItem] ){
                                                     CGRectAddAttribute(&bounds,
                                                                        layoutConstraint.secondAttribute,
                                                                        [(UIView *)layoutConstraint.firstItem bounds],
                                                                        layoutConstraint.firstAttribute,
                                                                        layoutConstraint.constant);
-                                                    
+
+                                                }else if( [view isEqual:layoutConstraint.firstItem] && ![self isEqual:layoutConstraint.secondItem] ){
+
+                                                    CGRectAddAttribute(&bounds,
+                                                                       layoutConstraint.firstAttribute,
+                                                                       [(UIView *)layoutConstraint.secondItem frame],
+                                                                       layoutConstraint.secondAttribute,
+                                                                       layoutConstraint.constant);
+
                                                 }
-                                                
+
                                             }
 
                                             center = CGPointMake(bounds.origin.x +bounds.size.width /2, bounds.origin.y +bounds.size.height /2);
