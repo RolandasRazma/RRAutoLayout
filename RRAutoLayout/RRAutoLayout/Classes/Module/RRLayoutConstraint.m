@@ -69,7 +69,8 @@
 
 - (id)initWithCoder:(NSCoder *)aDecoder {
     if( (self = [super init]) ){
-
+        _priority = RRLayoutPriorityRequired;
+        
         if ( [aDecoder containsValueForKey:@"NSFirstItem"] ){
             _firstItem = [aDecoder decodeObjectForKey:@"NSFirstItem"];
         }
@@ -121,6 +122,7 @@
 
 - (id)initWithItem:(id)view1 attribute:(RRLayoutAttribute)attr1 relatedBy:(RRLayoutRelation)relation toItem:(id)view2 attribute:(RRLayoutAttribute)attr2 multiplier:(CGFloat)multiplier constant:(CGFloat)c {
     if( (self = [super init]) ){
+        _priority       = RRLayoutPriorityRequired;
         _firstItem      = view1;
         _firstAttribute = attr1;
         _relation       = relation;
