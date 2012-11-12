@@ -1,7 +1,7 @@
 RRAutoLayout
 ============
 
-**iOS6** **AutoLayout** backport to **iOS5**
+**iOS6** [AutoLayout](https://developer.apple.com/library/ios/#documentation/UserExperience/Conceptual/AutolayoutPG/Articles/Introduction.html) backport to **iOS5**
 
 Disclaimer
 ============
@@ -10,7 +10,7 @@ I assume you are advanced iOS developer, know most of its internals and understa
 What you will find inside
 ============
 If you fork, you will find workspace with 2 projects **RRTestApp** and **RRAutoLayout**.<br />
-**RRTestApp** has constraints based layout and all constrains added in interface builder like you normally would do for iOS6, whats interesting is that it has deployment target iOS5. You can run same project on iOS6 and iOS5 and it should look and behave (when rotating) the same. Essentially its iOS6 AutoLayout back port to iOS5
+**RRTestApp** has [constraints](https://developer.apple.com/library/ios/#documentation/UserExperience/Conceptual/AutolayoutPG/Articles/constraintFundamentals.html#//apple_ref/doc/uid/TP40010853-CH2-SW1) based layout and all constrains added in interface builder like you normally would do for iOS6, whats interesting is that it has deployment target iOS5. You can run same project on iOS6 and iOS5 and it should look and behave (when rotating) the same. Essentially its iOS6 [AutoLayout]((https://developer.apple.com/library/ios/#documentation/UserExperience/Conceptual/AutolayoutPG/Articles/Introduction.html)) back port to iOS5
 
 I don't have blog so...
 ============
