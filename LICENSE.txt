@@ -1,4 +1,4 @@
-http://ud7.com/
+https://github.com/RolandasRazma/RRAutoLayout/
 
 Copyright (c) 2012 Rolandas Razma <rolandas@razma.lt>
 
