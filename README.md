@@ -26,15 +26,28 @@ So first things first, I created workspace with 2 projects **RRTestApp** and **R
 So first lets fix errors you getting by running constraints containing project on iOS5. Error you see is because unarchiving compiled Interface Builder files runtime cant find `NSLayoutConstraints`. So the obvious solution is to create class with same name. Remember I wrote "fall back to default iOS6 implementation when running on iOS6"? So we can't just create `NSLayoutConstraint` class because it would conflict with default Apple one on iOS6. We need a way to create it on runtime in iOS5 but not iOS6 - and for that we will use magic of `<objc/runtime.h>` `objc_registerClassPair`.<br />
 First lets check if `NSLayouConstraints` is pressent and if not we will rename our class (`RRLayoutConstraint`) to `NSLayoutConstraint` so:
 ```objc
-    if( !NSClassFromString(@"NSLayoutConstraint") ){
-        objc_registerClassPair(objc_allocateClassPair([RRLayoutConstraint class], "NSLayoutConstraint", 0));
-    }
+if( !NSClassFromString(@"NSLayoutConstraint") ){
+    objc_registerClassPair(objc_allocateClassPair([RRLayoutConstraint class], "NSLayoutConstraint", 0));
+}
 ```
 Nice, project starts without errors, but we see nothing on the screen. First we need to populate our class with data from `XIB` unarchiver. This is quit easy, just `[aDecoder decodeIntegerForKey:@"..."]` and set it where it belongs.<br />
 Now we have our `NSLayoutConstraint` with all data from Interface Builder, but it gets `dealloc`'ed as soon as it created - we need to hold onto it. From Aple docs we see that `UIView` holds all its constraints, but views on iOS5 don't have all those ivars and methods to hold them...<br />
 Adding methods is quite easy, everyone who reads this is already familiar with categories and if not..., well you shouldn't be reading this :) So as I wrote - we need clever way to store constraints in `UIView` on iOS5 and leverage all of its memory management. Lets start with `-[UIView constraints]` and `-[UIView addConstraint:]`. 
 We don't want just drop those into category of `UIView` because they would conflict on iOS6 default implementation, so we need magic of `<objc/runtime.h>` again. First lets check if we not running in iOS6 `if( ![[UIView class] respondsToSelector:@selector(requiresConstraintBasedLayout)] )` if not - insert our custom implementation of methods with default names of iOS6 - `class_addMethod`.<br />
-Ok, so far so good, we have nonconflicting implementation in iOS5 witch does nothing in iOS6, now... were to store those constraints... (as you know categories don't have ivars). For this we will use quite new `<objc/runtime.h>` magic (this works from 10.6 as I remember) `objc_setAssociatedObject`. Still with me? :) so what we just did is "Sets an associated value for a given object using a given key and association policy.".<br />
+Ok, so far so good, we have nonconflicting implementation in iOS5 witch does nothing in iOS6, now... were to store those constraints... (as you know categories don't have ivars). For this we will use quite new `<objc/runtime.h>` magic (this works from 10.6 as I remember) `objc_setAssociatedObject`. 
+```objc
+- (void)rr_a_addConstraint:(NSLayoutConstraint *)constraint {
+    NSMutableArray *internalConstraints = objc_getAssociatedObject(self, "rr_internalConstraints");
+    if( !internalConstraints ){
+        internalConstraints = [NSMutableArray array];
+        objc_setAssociatedObject(self, "rr_internalConstraints", internalConstraints, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    }
+    [internalConstraints addObject:constraint];
+    
+    ...
+}
+```
+Still with me? :) so what we just did is "Sets an associated value for a given object using a given key and association policy.".<br />
 So the easiest part is done - we loaded constraints and have them stored on `UIView` now we need all custom logic to use them Apple way and for that lets look at the cal tree of starting the app [/Extras/app-start.html](https://github.com/RolandasRazma/RRAutoLayout/tree/master/Extras) As you can see there is quite few methods with *constraints* and even more hitting them. We already inserted non conflicting (iOS6/iOS5) methods now lets look how to call them from default apple methods what already exists on iOS5. For that we will use `<objc/runtime.h>` magic again. This time `method_exchangeImplementations`. I assume you already know how to do that so won't go into deep explanation how it works. 
 Everything is straight forward: find *constraints* methods, look witch methods calls them on iOS6, and add same call paths to iOS5.<br />
 Ok, we have constraints stored on `UIView`, and call paths that use them...<br />
