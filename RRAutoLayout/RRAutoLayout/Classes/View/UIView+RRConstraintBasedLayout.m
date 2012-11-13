@@ -29,17 +29,29 @@
 static inline float CGRectAttribute(CGRect rect, RRLayoutAttribute attribute){
     
     switch ( attribute ) {
-        case RRLayoutAttributeLeading:
-            return rect.origin.x;
         case RRLayoutAttributeTop:
             return rect.origin.y;
         case RRLayoutAttributeBottom:
             return rect.origin.y +rect.size.height;
+        case RRLayoutAttributeLeft:
+        case RRLayoutAttributeLeading:
+            return rect.origin.x;
+        case RRLayoutAttributeRight:
         case RRLayoutAttributeTrailing:
             return rect.origin.x +rect.size.width;
-        default:
-            NSLog(@"CGRectAttribute %i", attribute);
-            break;
+        case RRLayoutAttributeWidth:
+            return rect.size.width;
+        case RRLayoutAttributeHeight:
+            return rect.size.height;
+        case RRLayoutAttributeCenterX:
+            return rect.origin.x +rect.size.width /2;
+        case RRLayoutAttributeCenterY:
+        case RRLayoutAttributeBaseline:
+            return rect.origin.y +rect.size.height /2;
+        case RRLayoutAttributeNotAnAttribute: {
+            NSLog(@"CGRectAttribute tryed to access RRLayoutAttributeNotAnAttribute");
+            return 0.0f;
+        }
     }
     
     return 0.0f;
@@ -234,6 +246,7 @@ static inline void CGRectAddAttribute(CGRect *rect, RRLayoutAttribute attribute1
                                             for( NSLayoutConstraint *layoutConstraint in constraints ){
 
                                                 if( [view isEqual: layoutConstraint.firstItem] && [self isEqual: layoutConstraint.secondItem] ){
+                                                    
                                                     CGRectAddAttribute(&bounds,
                                                                        layoutConstraint.firstAttribute,
                                                                        [(UIView *)layoutConstraint.secondItem bounds],
@@ -241,6 +254,7 @@ static inline void CGRectAddAttribute(CGRect *rect, RRLayoutAttribute attribute1
                                                                        layoutConstraint.constant);
                                                     
                                                 }else if( [view isEqual:layoutConstraint.secondItem] && [self isEqual: layoutConstraint.firstItem] ){
+                                                    
                                                     CGRectAddAttribute(&bounds,
                                                                        layoutConstraint.secondAttribute,
                                                                        [(UIView *)layoutConstraint.firstItem bounds],
