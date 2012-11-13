@@ -223,6 +223,16 @@ static inline void CGRectAddAttribute(CGRect *rect, RRLayoutAttribute attribute1
 
 - (void)rr_r_layoutSubviews {
 
+    /**
+     This needs rewrite.
+     Problems:
+        view herarchy dependant:
+            if position depends on other view width, width has to be set first
+            if width depends on other view width it doesnt work at all.
+     
+     need some aproach to gather all constraints affetinf constraint. Would implement -[UIVIew constraintsAffectingLayoutForAxis:] help?
+     */
+    
     NSArray *constraints = self.constraints;
     if( constraints.count ){
         [self.subviews enumerateObjectsWithOptions: NSEnumerationReverse
